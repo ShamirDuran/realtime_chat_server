@@ -1,0 +1,46 @@
+const morgan = require('morgan'); // HTTP request logger middleware for node.js
+const bodyParser = require('body-parser'); // Parse incoming request bodies in a middleware before your handlers, available under the req.body property.
+const helmet = require('helmet'); // Set security HTTP headers
+const xss = require('xss-clean'); // Sanitize user input coming to prevent XSS attacks
+const rateLimit = require('express-rate-limit');
+const mongosanitize = require('express-mongo-sanitize');
+const port = process.env.PORT || 3000;
+
+const express = require('express');
+const cors = require('cors');
+
+const http = require('http');
+const app = express();
+const server = http.createServer(app);
+
+// Middlewares
+app.use(
+  cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
+  })
+);
+app.use(express.json({ limit: '10kb' })); // request body size limit
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(morgan('dev'));
+app.use(helmet());
+app.use(morgan('dev'));
+
+const limiter = rateLimit({
+  limit: 100,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  standardHeaders: 'draft-7',
+  legacyHeaders: false, // Disable the 'X-RateLimit-*' header
+  message: 'Too many requests from this IP, please try again in an hour!',
+});
+
+app.use(limiter);
+app.use(express.urlencoded({ extended: true }));
+app.use(mongosanitize());
+app.use(xss());
+
+server.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});
