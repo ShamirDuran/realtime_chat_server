@@ -1,0 +1,55 @@
+const { body } = require('express-validator');
+const validateResultsMiddleware = require('../../middlewares/validateResults.middleware');
+
+const registerValidation = [
+  body('firstName')
+    .exists()
+    .withMessage('Field firstname is required')
+    .notEmpty()
+    .trim()
+    .isLength({ min: 3, max: 50 })
+    .withMessage('Field firstname must be between 3 and 50 characters')
+    .escape()
+    .toLowerCase(),
+  body('lastName')
+    .exists()
+    .withMessage('Field lastname is required')
+    .notEmpty()
+    .trim()
+    .isLength({ min: 3, max: 50 })
+    .withMessage('Field lastname must be between 3 and 50 characters')
+    .escape()
+    .toLowerCase(),
+  body('email')
+    .exists()
+    .withMessage('Field email is required')
+    .notEmpty()
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Invalid email'),
+  body('password')
+    .exists()
+    .withMessage('Field password is required')
+    .notEmpty()
+    .trim()
+    .isLength({ min: 6, max: 20 })
+    .withMessage('Field password must be between 6 and 20 characters'),
+  validateResultsMiddleware,
+];
+
+const loginValidation = [
+  body('email')
+    .exists()
+    .withMessage('Field email is required')
+    .notEmpty()
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Invalid email'),
+  body('password').exists().withMessage('Field password is required').notEmpty().trim(),
+  validateResultsMiddleware,
+];
+
+module.exports = {
+  registerValidation,
+  loginValidation,
+};

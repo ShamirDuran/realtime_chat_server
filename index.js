@@ -4,14 +4,17 @@ const helmet = require('helmet'); // Set security HTTP headers
 const xss = require('xss-clean'); // Sanitize user input coming to prevent XSS attacks
 const rateLimit = require('express-rate-limit');
 const mongosanitize = require('express-mongo-sanitize');
-const port = process.env.PORT || 3000;
-
 const express = require('express');
 const cors = require('cors');
+const { port } = require('./src/config/env.config');
+const { dbConnection } = require('./src/database/config.db');
 
 const http = require('http');
 const app = express();
 const server = http.createServer(app);
+const routes = require('./src/routes/index');
+
+dbConnection();
 
 // Middlewares
 app.use(
@@ -40,6 +43,7 @@ app.use(limiter);
 app.use(express.urlencoded({ extended: true }));
 app.use(mongosanitize());
 app.use(xss());
+app.use(routes);
 
 server.listen(port, () => {
   console.log(`Server listening on port ${port}`);
