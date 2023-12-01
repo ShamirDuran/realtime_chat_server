@@ -6,7 +6,7 @@ router.post(
   '/register',
   authValidation.registerValidation,
   authController.register,
-  authController.sendOtp
+  authController.sendVerificationEmail
 );
 
 router.post('/login', authValidation.loginValidation, authController.login);

@@ -58,12 +58,6 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  otp: {
-    type: String,
-  },
-  otpExpiryTime: {
-    type: Number,
-  },
   socketId: {
     type: String,
   },
@@ -71,14 +65,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['Online', 'Offline'],
   },
-});
-
-userSchema.pre('save', async function (next) {
-  // Check if otp is modified and hash it
-  if (!this.isModified('otp') || !this.otp) return next();
-
-  this.otp = await bcrypt.hash(this.otp.toString(), 12);
-  next();
 });
 
 userSchema.pre('save', async function (next) {
@@ -101,6 +87,15 @@ userSchema.pre('save', function (next) {
 
 userSchema.methods.validatePassword = async function (candidatePassword, userPassword) {
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+userSchema.methods.changedPasswordAfter = function (JWTTimeStamp) {
+  if (this.passwordChangedAt) {
+    const changedTimeStamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+    return JWTTimeStamp < changedTimeStamp;
+  }
+
+  return false;
 };
 
 userSchema.methods.toJSON = function () {
