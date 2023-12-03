@@ -26,6 +26,16 @@ const generateJWT = (payload, expirationTime) => {
   });
 };
 
+const validateJWT = (token) => {
+  try {
+    const decoded = jwt.verify(token, jwtSecret);
+    return [true, decoded];
+  } catch (error) {
+    return [false, null];
+  }
+};
+
 module.exports = {
   generateJWT,
+  validateJWT,
 };

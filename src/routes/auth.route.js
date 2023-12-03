@@ -10,5 +10,6 @@ router.post(
 );
 
 router.post('/login', authValidation.loginValidation, authController.login);
+router.get('/verify-account/:token', authController.verify);
 
 module.exports = router;

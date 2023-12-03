@@ -4,7 +4,7 @@ const User = require('../models/user.model');
 const { gmailTransport } = require('../services/mail/mail.service');
 const verifyAccountTemplate = require('../services/mail/templates/verifyAccount.template');
 const emailConfig = require('../config/mail.config');
-const { generateJWT } = require('../utils/jwt.util');
+const { generateJWT, validateJWT } = require('../utils/jwt.util');
 const { upperCammelCase } = require('../utils/formatter.util');
 
 const register = catchAsync(async (req, res = response, next) => {
@@ -21,10 +21,7 @@ const register = catchAsync(async (req, res = response, next) => {
     });
   } else if (existingUser) {
     // if user exists but not verified then update the user
-    await User.findOneAndUpdate({ email }, userData, {
-      new: true,
-      validateModifiedOnly: true,
-    });
+    await User.findOneAndUpdate({ email }, userData);
 
     req.uid = existingUser._id;
     next();
@@ -93,6 +90,7 @@ const sendVerificationEmail = catchAsync(async (req, res = response) => {
         msg: 'Error sending verification email',
       });
     } else {
+      console.log('verifyToken', verifyToken);
       res.json({
         status: true,
         msg: 'Verification email sent successfully',
@@ -101,8 +99,46 @@ const sendVerificationEmail = catchAsync(async (req, res = response) => {
   });
 });
 
+const verify = catchAsync(async (req, res = response) => {
+  const { token } = req.params;
+  const [isValid, decoded] = validateJWT(token);
+
+  if (!isValid) {
+    return res.status(400).json({
+      status: false,
+      msg: 'Link is invalid or has expired',
+    });
+  }
+
+  const { uid } = decoded;
+
+  const user = await User.findById(uid);
+  if (!user) {
+    return res.status(400).json({
+      status: false,
+      msg: 'User not found',
+    });
+  }
+
+  if (user.verified) {
+    return res.status(400).json({
+      status: false,
+      msg: 'User already verified',
+    });
+  }
+
+  user.verified = true;
+  await user.save();
+
+  res.json({
+    status: true,
+    msg: 'Account verified successfully',
+  });
+});
+
 module.exports = {
   register,
   login,
   sendVerificationEmail,
+  verify,
 };
