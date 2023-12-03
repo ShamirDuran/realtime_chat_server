@@ -68,12 +68,7 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', async function (next) {
-  // if password is same as before then save the encripted password and ignore the new one
-  if (
-    !bcrypt.compare(this.get('password'), this.password) ||
-    !this.password ||
-    !this.isNew
-  ) {
+  if (!this.password) {
     return next();
   }
 
@@ -82,12 +77,17 @@ userSchema.pre('save', async function (next) {
 });
 
 userSchema.pre('findOneAndUpdate', async function (next) {
+  const user = await this.model.findOne(this.getQuery());
+  const updatedUser = this.getUpdate();
+
   // if password is same as before then save the encripted password and ignore the new one
-  if (!bcrypt.compare(this.getUpdate().password, this.password) || !this.password) {
+  if (!bcrypt.compare(updatedUser.password, user.password) || !this.password) {
+    this.getUpdate().password = user.password;
+
     return next();
   }
 
-  this.getUpdate().password = await bcrypt.hash(this.getUpdate().password.toString(), 12);
+  this.getUpdate().password = await bcrypt.hash(updatedUser.password.toString(), 12);
   next();
 });
 
