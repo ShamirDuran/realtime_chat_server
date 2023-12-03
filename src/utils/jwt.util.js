@@ -8,8 +8,6 @@ const { jwtSecret, jwtExpiresIn } = require('../config/env.config');
  */
 const generateJWT = (payload, expirationTime) => {
   return new Promise((resolve, reject) => {
-    const payload = { ...payload };
-
     jwt.sign(
       payload,
       jwtSecret,
