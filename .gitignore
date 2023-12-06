@@ -1,4 +1,6 @@
 # Logs
+data/mongo
+
 logs
 *.log
 npm-debug.log*
