@@ -34,7 +34,7 @@ const register = catchAsync(async (req, res = response, next) => {
   }
 });
 
-const login = catchAsync(async (req, res = response, next) => {
+const login = catchAsync(async (req, res = response) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email }).select('+password');

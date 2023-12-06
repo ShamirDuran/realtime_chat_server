@@ -12,7 +12,7 @@ const jwtValidation = catchAsync(async (req, res = response, next) => {
 
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
-  } else if (req.cookies.jwt) {
+  } else if (req.cookies?.jwt) {
     token = req.cookies.jwt;
   }
 
@@ -33,7 +33,7 @@ const jwtValidation = catchAsync(async (req, res = response, next) => {
   }
 
   // check if user changed password after the token was issued
-  if (user.changePasswordAfter(jwtSignedTime)) {
+  if (user.changedPasswordAfter(jwtSignedTime)) {
     return res.status(401).json({
       error: 'User recently changed password! Please log in again.',
     });

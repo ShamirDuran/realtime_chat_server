@@ -65,6 +65,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['Online', 'Offline'],
   },
+  deleted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 userSchema.pre('save', async function (next) {
