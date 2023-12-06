@@ -53,10 +53,12 @@ const login = catchAsync(async (req, res = response, next) => {
     });
   }
 
+  const token = await generateJWT({ uid: user._id }, '24h');
+
   // create token
   res.json({
     status: true,
-    token: 'token',
+    token,
     msg: 'Login successful',
   });
 });

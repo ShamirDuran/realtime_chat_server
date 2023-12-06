@@ -68,9 +68,8 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.pre('save', async function (next) {
-  if (!this.password) {
-    return next();
-  }
+  // if password is same as before then save the encripted password and ignore the new one
+  if (!this.isModified('password') || !this.password) return next();
 
   this.password = await bcrypt.hash(this.password.toString(), 12);
   next();
