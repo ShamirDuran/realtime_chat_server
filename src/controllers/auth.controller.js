@@ -53,6 +53,13 @@ const login = catchAsync(async (req, res = response, next) => {
     });
   }
 
+  if (!user.verified) {
+    return res.status(400).json({
+      status: false,
+      msg: 'Account not verified',
+    });
+  }
+
   const token = await generateJWT({ uid: user._id }, '24h');
 
   // create token
