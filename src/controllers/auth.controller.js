@@ -78,7 +78,7 @@ const sendVerificationEmail = catchAsync(async (req, res = response) => {
   const verifyToken = await generateJWT({ uid, firstName: user.firstName }, timeToExpire);
   const verifyLink = `${req.protocol}://${req.get(
     'host'
-  )}/api/auth/verify-account/${verifyToken}`;
+  )}/auth/verify-account/${verifyToken}`;
 
   const mailOptions = {
     from: emailConfig.user,

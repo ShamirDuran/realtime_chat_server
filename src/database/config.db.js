@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
-const { dbUsername, dbPassword, dbPort, dbName } = require('../config/env.config');
-
-const databaseHost = `mongodb://${dbUsername}:${dbPassword}@localhost:${dbPort}/${dbName}`;
+const { dbConnection: databaseHost } = require('../config/env.config');
 
 const dbConnection = async () => {
   try {

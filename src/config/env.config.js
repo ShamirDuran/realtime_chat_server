@@ -11,5 +11,6 @@ module.exports = {
   dbPassword: process.env.DB_PASSWORD || 'secret',
   dbName: process.env.DB_NAME || 'realtime_chat',
   dbPort: process.env.DB_PORT || 27017,
+  dbConnection: process.env.DB_CONNECTION, // mongo atlas connection string
   otpExpires: process.env.OTP_EXPIRES || 10,
 };
