@@ -5,8 +5,9 @@ const User = require('../models/user.model');
 const getById = catchAsync(async (req, res = response) => {
   const { id } = req.params;
 
-  // select all fiedl except deleted
-  const user = await User.findById(id).select('-deleted -verified -password');
+  const user = await User.findById(id).select(
+    '_id firstName lastName about avatar email lastSeen status'
+  );
 
   res.json({
     status: true,

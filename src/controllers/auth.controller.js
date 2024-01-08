@@ -76,7 +76,7 @@ const sendVerificationEmail = catchAsync(async (req, res = response) => {
   const timeToExpire = '48h';
 
   const user = await User.findById(uid);
-  const verifyToken = await generateJWT({ uid, firstName: user.firstName }, timeToExpire);
+  const verifyToken = await generateJWT({ uid }, timeToExpire);
   const verifyLink = `${envConfig.webUrl}/auth/verify-account/${verifyToken}`;
 
   const mailOptions = {
@@ -141,7 +141,9 @@ const verify = catchAsync(async (req, res = response) => {
 
   res.json({
     status: true,
-    msg: 'Your account has been verified. You can now login.',
+    msg: `${upperCammelCase(
+      user.firstName
+    )}, your account has been verified successfully. Please login.`,
   });
 });
 
