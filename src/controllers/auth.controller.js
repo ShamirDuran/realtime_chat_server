@@ -6,6 +6,7 @@ const verifyAccountTemplate = require('../services/mail/templates/verifyAccount.
 const emailConfig = require('../config/mail.config');
 const { generateJWT, validateJWT } = require('../utils/jwt.util');
 const { upperCammelCase } = require('../utils/formatter.util');
+const envConfig = require('../config/env.config');
 
 const register = catchAsync(async (req, res = response, next) => {
   const { firstName, lastName, email, password } = req.body;
@@ -76,9 +77,7 @@ const sendVerificationEmail = catchAsync(async (req, res = response) => {
 
   const user = await User.findById(uid);
   const verifyToken = await generateJWT({ uid, firstName: user.firstName }, timeToExpire);
-  const verifyLink = `${req.protocol}://${req.get(
-    'host'
-  )}/auth/verify-account/${verifyToken}`;
+  const verifyLink = `${envConfig.webUrl}/auth/verify-account/${verifyToken}`;
 
   const mailOptions = {
     from: emailConfig.user,
@@ -110,12 +109,13 @@ const sendVerificationEmail = catchAsync(async (req, res = response) => {
 
 const verify = catchAsync(async (req, res = response) => {
   const { token } = req.params;
+
   const [isValid, decoded] = validateJWT(token);
 
   if (!isValid) {
     return res.status(400).json({
       status: false,
-      msg: 'Link is invalid or has expired',
+      msg: 'Link has expired. Please register again.',
     });
   }
 
@@ -125,14 +125,14 @@ const verify = catchAsync(async (req, res = response) => {
   if (!user) {
     return res.status(400).json({
       status: false,
-      msg: 'User not found',
+      msg: 'User does not exist. Please register.',
     });
   }
 
   if (user.verified) {
     return res.status(400).json({
       status: false,
-      msg: 'User already verified',
+      msg: 'Your account has already been verified. Please login.',
     });
   }
 
@@ -141,7 +141,7 @@ const verify = catchAsync(async (req, res = response) => {
 
   res.json({
     status: true,
-    msg: 'Account verified successfully',
+    msg: 'Your account has been verified. You can now login.',
   });
 });
 

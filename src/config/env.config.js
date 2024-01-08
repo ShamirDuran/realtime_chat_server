@@ -5,6 +5,7 @@ module.exports = {
   port: process.env.PORT || 3000,
   prefix: process.env.PREFIX || 'api',
   environment: process.env.ENVIRONMENT || 'development',
+  webUrl: process.env.WEB_URL || 'http://localhost:3000',
   jwtSecret: process.env.JWT_SECRET || 'secret',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
   dbUsername: process.env.DB_USERNAME || 'root',
