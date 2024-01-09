@@ -6,8 +6,15 @@ const getById = catchAsync(async (req, res = response) => {
   const { id } = req.params;
 
   const user = await User.findById(id).select(
-    '_id firstName lastName about avatar email lastSeen status'
+    '_id fullName about avatar email lastSeen status'
   );
+
+  if (!user) {
+    return res.status(404).json({
+      status: false,
+      msg: 'User not found',
+    });
+  }
 
   res.json({
     status: true,
@@ -18,13 +25,19 @@ const getById = catchAsync(async (req, res = response) => {
 
 const getAll = catchAsync(async (req, res = response) => {
   const { uid } = req;
-  const { onlyEnabled } = req.query;
+  const { name, onlyEnabled, page = 1, limit = 10 } = req.query;
 
   const users = await User.find({
     _id: { $ne: uid },
     verified: true,
     deleted: onlyEnabled === false ? false : { $in: [true, false] },
-  }).select('firstName lastName _id');
+    ...(name && {
+      fullName: { $regex: name, $options: 'i' },
+    }),
+  })
+    .select('_id fullName avatar')
+    .limit(limit * 1)
+    .skip((page - 1) * limit);
 
   res.json({
     status: true,

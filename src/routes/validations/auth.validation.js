@@ -2,22 +2,13 @@ const { body } = require('express-validator');
 const validateResultsMiddleware = require('../../middlewares/validateResults.middleware');
 
 const registerValidation = [
-  body('firstName')
+  body('fullName')
     .exists()
-    .withMessage('Field firstname is required')
+    .withMessage('Field fullName is required')
     .notEmpty()
     .trim()
-    .isLength({ min: 3, max: 50 })
-    .withMessage('Field firstname must be between 3 and 50 characters')
-    .escape()
-    .toLowerCase(),
-  body('lastName')
-    .exists()
-    .withMessage('Field lastname is required')
-    .notEmpty()
-    .trim()
-    .isLength({ min: 3, max: 50 })
-    .withMessage('Field lastname must be between 3 and 50 characters')
+    .isLength({ min: 3, max: 60 })
+    .withMessage('Field fullName must be between 3 and 50 characters')
     .escape()
     .toLowerCase(),
   body('email')

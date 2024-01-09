@@ -9,8 +9,8 @@ const { upperCammelCase } = require('../utils/formatter.util');
 const envConfig = require('../config/env.config');
 
 const register = catchAsync(async (req, res = response, next) => {
-  const { firstName, lastName, email, password } = req.body;
-  const userData = { firstName, lastName, email, password };
+  const { fullName, email, password } = req.body;
+  const userData = { fullName, email, password };
 
   const existingUser = await User.findOne({ email });
 
@@ -78,16 +78,13 @@ const sendVerificationEmail = catchAsync(async (req, res = response) => {
   const user = await User.findById(uid);
   const verifyToken = await generateJWT({ uid }, timeToExpire);
   const verifyLink = `${envConfig.webUrl}/auth/verify-account/${verifyToken}`;
+  const firstName = user.fullName.split(' ')[0];
 
   const mailOptions = {
     from: emailConfig.user,
     to: user.email,
     subject: 'Account Verification',
-    html: verifyAccountTemplate(
-      upperCammelCase(user.firstName),
-      verifyLink,
-      timeToExpire
-    ),
+    html: verifyAccountTemplate(upperCammelCase(firstName), verifyLink, timeToExpire),
   };
 
   gmailTransport.sendMail(mailOptions, (error, info) => {
@@ -139,10 +136,12 @@ const verify = catchAsync(async (req, res = response) => {
   user.verified = true;
   await user.save();
 
+  const firstName = user.fullName.split(' ')[0];
+
   res.json({
     status: true,
     msg: `${upperCammelCase(
-      user.firstName
+      firstName
     )}, your account has been verified successfully. Please login.`,
   });
 });
