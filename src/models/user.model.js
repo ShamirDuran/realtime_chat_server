@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-// TODO: redifine to fullname to avoid conflict with capture on frontend
 const userSchema = new mongoose.Schema({
   fullName: {
     type: String,

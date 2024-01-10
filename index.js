@@ -32,7 +32,7 @@ app.use(helmet());
 app.use(morgan('dev'));
 
 const limiter = rateLimit({
-  limit: 100,
+  limit: 10000,
   windowMs: 15 * 60 * 1000, // 15 minutes
   standardHeaders: 'draft-7',
   legacyHeaders: false, // Disable the 'X-RateLimit-*' header
