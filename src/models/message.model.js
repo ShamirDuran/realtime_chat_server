@@ -2,17 +2,17 @@ const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
   chat: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.ObjectId,
     ref: 'Chat',
     required: true,
   },
   from: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.ObjectId,
     ref: 'User',
     required: true,
   },
   to: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.ObjectId,
     ref: 'User',
   },
   content: {
@@ -22,11 +22,14 @@ const messageSchema = new mongoose.Schema({
   type: {
     type: String,
     enum: ['Text', 'Image', 'Video', 'Audio', 'File'],
-    default: 'text',
+    default: 'Text',
   },
   readBy: [
     {
-      user: { type: Schema.Types.ObjectId, ref: 'User' },
+      user: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
       readAt: { type: Date },
     },
   ],

@@ -14,6 +14,14 @@ const app = express();
 const server = http.createServer(app);
 const routes = require('./src/routes/index');
 
+// Sockets
+module.exports.io = require('socket.io')(server, {
+  cors: {
+    origin: '*',
+  },
+});
+require('./src/sockets/index');
+
 dbConnection();
 
 // Middlewares
@@ -21,7 +29,6 @@ app.use(
   cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
   })
 );
 app.use(express.json({ limit: '10kb' })); // request body size limit
@@ -29,7 +36,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.use(helmet());
-app.use(morgan('dev'));
 
 const limiter = rateLimit({
   limit: 10000,

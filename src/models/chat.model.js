@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const chatSchema = new mongoose.Schema({
-  users: [
+  participants: [
     {
       user: {
         type: mongoose.Schema.ObjectId,
@@ -9,8 +9,8 @@ const chatSchema = new mongoose.Schema({
       },
       status: {
         type: String,
-        enum: ['member', 'admin', 'left'],
-        default: 'active',
+        enum: ['Member', 'Admin', 'Left'],
+        default: 'Member',
       },
     },
   ],
@@ -40,7 +40,7 @@ const chatSchema = new mongoose.Schema({
   events: [
     {
       type: String,
-      created: {
+      createdAt: {
         type: Date,
         default: Date.now,
       },
@@ -49,8 +49,15 @@ const chatSchema = new mongoose.Schema({
 });
 
 chatSchema.methods.toJSON = function () {
-  const { __v, _id, ...chat } = this.toObject();
+  const { __v, _id, participants, ...chat } = this.toObject();
   chat.uid = _id;
+
+  chat.participants = participants.map((participant) => {
+    const { _id, ...user } = participant.user;
+    user.uid = _id;
+    return { user, status: participant.status };
+  });
+
   return chat;
 };
 
