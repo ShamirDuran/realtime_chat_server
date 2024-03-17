@@ -11,10 +11,6 @@ const messageSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  to: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-  },
   content: {
     type: String,
     required: true,
@@ -48,8 +44,15 @@ const messageSchema = new mongoose.Schema({
 });
 
 messageSchema.methods.toJSON = function () {
-  const { __v, _id, ...message } = this.toObject();
+  const { __v, _id, from, ...message } = this.toObject();
   message.uid = _id;
+
+  message.from = {
+    uid: from._id,
+    ...from,
+  };
+
+  delete message.from._id;
   return message;
 };
 

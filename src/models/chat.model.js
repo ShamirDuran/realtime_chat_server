@@ -14,10 +14,12 @@ const chatSchema = new mongoose.Schema({
       },
     },
   ],
-  lastMessage: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Message',
-  },
+  messages: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Message',
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
@@ -49,13 +51,25 @@ const chatSchema = new mongoose.Schema({
 });
 
 chatSchema.methods.toJSON = function () {
-  const { __v, _id, participants, ...chat } = this.toObject();
+  const { __v, _id, participants, messages, ...chat } = this.toObject();
   chat.uid = _id;
 
   chat.participants = participants.map((participant) => {
-    const { _id, ...user } = participant.user;
+    const { __v, _id, ...user } = participant.user;
     user.uid = _id;
     return { user, status: participant.status };
+  });
+
+  chat.messages = messages.map((message) => {
+    const { __v, _id, from, ...msg } = message;
+    msg.uid = _id;
+    msg.from = {
+      uid: from._id,
+      ...from,
+    };
+
+    delete msg.from._id;
+    return msg;
   });
 
   return chat;

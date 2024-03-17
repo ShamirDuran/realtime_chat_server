@@ -50,7 +50,17 @@ io.on('connection', (socket) => {
         participants: { $elemMatch: { user: to } },
         participants: { $elemMatch: { user: from } },
         group: false,
-      }).populate('participants.user', '_id fullName avatar status');
+      })
+        .populate('participants.user', '_id fullName avatar status')
+        .populate({
+          path: 'messages',
+          options: {
+            populate: {
+              path: 'from',
+              select: '_id fullName avatar',
+            },
+          },
+        });
 
       if (!chat) {
         let newChat = await Chat.create({
@@ -58,10 +68,8 @@ io.on('connection', (socket) => {
           group: false,
         });
 
-        newChat = await Chat.findById(newChat).populate(
-          'participants.user',
-          '_id fullName avatar status'
-        );
+        await newChat.populate('participants.user', '_id fullName avatar status');
+        await newChat.populate('messages');
 
         socket.emit('start_chat', newChat);
       } else {
@@ -75,41 +83,59 @@ io.on('connection', (socket) => {
   socket.on('get_messages', async (data, callback) => {
     const { chat, page, size = 20 } = data;
 
-    const messages = await Message.find({ chat })
-      .sort({ createdAt: -1 })
-      .skip(page * size)
-      .limit(size)
-      .populate('from', '_id fullName avatar')
-      .populate('to', '_id fullName avatar');
+    const messages = await Chat.findById(chat)
+      .populate({
+        path: 'messages',
+        options: {
+          skip: page * size,
+          limit: size,
+        },
+      })
+      .select('messages');
 
     callback(messages);
   });
 
   socket.on('send_message', async (data) => {
-    const { chat, from, to, content, type } = data;
+    const { chat, from, content, type } = data;
 
-    const toUser = await User.findById(to);
     const fromUser = await User.findById(from);
+    const chatData = await Chat.findById(chat).populate(
+      'participants.user',
+      '_id socketId'
+    );
 
-    const newMessage = {
+    // Get participants except the sender
+    const toUsers = chatData.participants
+      .filter(({ user }) => user._id.toString() !== fromUser._id.toString())
+      .map((participant) => participant.user);
+
+    const newMessage = await Message.create({
       chat,
       from,
-      to,
       content,
       type,
-    };
-    await Message.create(newMessage);
-
-    // Incoming message
-    io.to(toUser?.socketId).emit('new_message', {
-      chat,
-      message: newMessage,
     });
+
+    // add new message id to chat messages
+    chatData.messages.push(newMessage);
+    await chatData.save();
+    await newMessage.populate('from', '_id fullName avatar');
 
     // Outgoing message
     io.to(fromUser?.socketId).emit('new_message', {
       chat,
       message: newMessage,
+    });
+
+    console.log('checking', toUsers);
+
+    // send message to all participants
+    toUsers.forEach((user) => {
+      io.to(user.socketId).emit('new_message', {
+        chat,
+        message: newMessage,
+      });
     });
   });
 
