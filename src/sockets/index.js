@@ -2,6 +2,7 @@ const { io } = require('../../index');
 const User = require('../models/user.model');
 const Chat = require('../models/chat.model');
 const Message = require('../models/message.model');
+const { messages: messagesConf } = require('../config/api.config');
 
 /**
  * Sockets explanation
@@ -39,59 +40,83 @@ io.on('connection', (socket) => {
     }
   }
 
+  // Retrieve list of all chats for a user
+  socket.on('get_direct_chats', async (data, callback) => {
+    const { uid } = data;
+
+    const chats = await Chat.find({
+      participants: {
+        $all: [{ $elemMatch: { user: uid } }],
+      },
+    })
+      .populate('participants.user', '_id fullName avatar email status')
+      .populate({
+        path: 'messages',
+        options: {
+          sort: { _id: -1 },
+          limit: messagesConf.limit,
+          populate: {
+            path: 'from',
+            select: '_id fullName avatar',
+          },
+        },
+      });
+
+    callback(chats);
+  });
+
   // TODO: Analize if this is necessary or could be done just with a request
   // one to one chat
   socket.on('start_chat', async (data) => {
-    try {
-      const { to, from } = data;
+    const { to, from } = data;
 
-      // Validate if already exists a chat between users
-      const chat = await Chat.findOne({
-        participants: { $elemMatch: { user: to } },
-        participants: { $elemMatch: { user: from } },
-        group: false,
-      })
-        .populate('participants.user', '_id fullName avatar status')
-        .populate({
-          path: 'messages',
-          options: {
-            populate: {
-              path: 'from',
-              select: '_id fullName avatar',
-            },
+    // Validate if already exists a chat between users
+    const chat = await Chat.findOne({
+      participants: {
+        $all: [{ $elemMatch: { user: to } }, { $elemMatch: { user: from } }],
+      },
+      group: false,
+    })
+      .populate('participants.user', '_id fullName avatar status')
+      .populate({
+        path: 'messages',
+        options: {
+          sort: { _id: -1 },
+          limit: messagesConf.limit,
+          populate: {
+            path: 'from',
+            select: '_id fullName avatar',
           },
-        });
+        },
+      });
 
-      if (!chat) {
-        let newChat = await Chat.create({
-          participants: [{ user: to }, { user: from }],
-          group: false,
-        });
+    if (!chat) {
+      let newChat = await Chat.create({
+        participants: [{ user: to }, { user: from }],
+        group: false,
+      });
 
-        await newChat.populate('participants.user', '_id fullName avatar status');
-        await newChat.populate('messages');
+      await newChat.populate('participants.user', '_id fullName avatar status');
+      await newChat.populate('messages');
 
-        socket.emit('start_chat', newChat);
-      } else {
-        socket.emit('start_chat', chat);
-      }
-    } catch (error) {
-      console.log(error.message);
+      socket.emit('start_chat', newChat);
+    } else {
+      socket.emit('start_chat', chat);
     }
   });
 
   socket.on('get_messages', async (data, callback) => {
-    const { chat, page, size = 20 } = data;
+    const { chat, page, size = messagesConf.limit } = data;
 
     const messages = await Chat.findById(chat)
+      .select('messages')
       .populate({
         path: 'messages',
         options: {
           skip: page * size,
           limit: size,
         },
-      })
-      .select('messages');
+      });
 
     callback(messages);
   });
@@ -127,8 +152,6 @@ io.on('connection', (socket) => {
       chat,
       message: newMessage,
     });
-
-    console.log('checking', toUsers);
 
     // send message to all participants
     toUsers.forEach((user) => {
