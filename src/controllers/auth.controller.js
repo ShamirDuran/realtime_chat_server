@@ -7,6 +7,7 @@ const emailConfig = require('../config/mail.config');
 const { generateJWT, validateJWT } = require('../utils/jwt.util');
 const { upperCammelCase } = require('../utils/formatter.util');
 const envConfig = require('../config/env.config');
+const passwordResetTemplate = require('../services/mail/templates/passwordResetTemplate');
 
 const register = catchAsync(async (req, res = response, next) => {
   const { fullName, email, password } = req.body;
@@ -104,6 +105,7 @@ const sendVerificationEmail = catchAsync(async (req, res = response) => {
   });
 });
 
+/// Verify token
 const verify = catchAsync(async (req, res = response) => {
   const { token } = req.params;
 
@@ -146,9 +148,86 @@ const verify = catchAsync(async (req, res = response) => {
   });
 });
 
+/// Requested password reset link
+const forgotPassword = catchAsync(async (req, res = response) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) return res.status(200).json({ status: true });
+
+  const timeToExpire = '1h';
+  const resetToken = await generateJWT({ uid: user._id }, timeToExpire);
+  const resetLink = `${envConfig.webUrl}/auth/password_reset/${resetToken}`;
+  const firstName = user.fullName.split(' ')[0];
+
+  const mailOptions = {
+    from: emailConfig.user,
+    to: user.email,
+    subject: 'Password Reset',
+    html: passwordResetTemplate(upperCammelCase(firstName), resetLink, timeToExpire),
+  };
+
+  gmailTransport.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      res.status(400).json({
+        status: false,
+        msg: 'Error sending password reset email',
+      });
+    } else {
+      res.json({ status: true });
+    }
+  });
+});
+
+/// Requested password reset
+const passwordReset = catchAsync(async (req, res = response) => {
+  const token = req.headers.authorization;
+  const { password } = req.body;
+
+  console.log('token', req.headers);
+
+  if (!token) {
+    return res.status(400).json({
+      status: false,
+      msg: 'Could not reset password. Please request a new link.',
+    });
+  }
+
+  const [isValid, decoded] = validateJWT(token);
+
+  if (!isValid) {
+    return res.status(400).json({
+      status: false,
+      msg: 'Link has expired. Please request a new link.',
+    });
+  }
+
+  const { uid } = decoded;
+
+  const user = await User.findById(uid);
+  if (!user) {
+    return res.status(400).json({
+      status: false,
+      msg: 'User does not exist. Please register.',
+    });
+  }
+
+  user.password = password;
+  await user.save();
+
+  return res.json({
+    status: true,
+    msg: 'Password reset successful. Please login.',
+  });
+});
+
 module.exports = {
   register,
   login,
   sendVerificationEmail,
   verify,
+  forgotPassword,
+  passwordReset,
 };

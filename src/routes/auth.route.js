@@ -10,6 +10,18 @@ router.post(
 );
 
 router.post('/login', authValidation.loginValidation, authController.login);
-router.get('/verify-account/:token', authController.verify);
+router.get('/verify_account/:token', authController.verify);
+
+router.post(
+  '/forgot_password',
+  authValidation.forgotPassword,
+  authController.forgotPassword
+);
+
+router.post(
+  '/password_reset',
+  authValidation.passwordReset,
+  authController.passwordReset
+);
 
 module.exports = router;

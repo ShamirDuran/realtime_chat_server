@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, check } = require('express-validator');
 const validateResultsMiddleware = require('../../middlewares/validateResults.middleware');
 
 const registerValidation = [
@@ -40,7 +40,31 @@ const loginValidation = [
   validateResultsMiddleware,
 ];
 
+const forgotPassword = [
+  body('email')
+    .exists()
+    .withMessage('Field email is required')
+    .notEmpty()
+    .isEmail()
+    .normalizeEmail()
+    .withMessage('Invalid email'),
+  validateResultsMiddleware,
+];
+
+const passwordReset = [
+  body('password')
+    .exists()
+    .withMessage('Field password is required')
+    .notEmpty()
+    .trim()
+    .isLength({ min: 6, max: 20 })
+    .withMessage('Field password must be between 6 and 20 characters'),
+  validateResultsMiddleware,
+];
+
 module.exports = {
   registerValidation,
   loginValidation,
+  forgotPassword,
+  passwordReset,
 };
