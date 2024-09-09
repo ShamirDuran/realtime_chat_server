@@ -46,7 +46,33 @@ const getAll = catchAsync(async (req, res = response) => {
   });
 });
 
+const updateName = catchAsync(async (req, res = response) => {
+  const { uid } = req;
+  const { name } = req.body;
+
+  await User.findByIdAndUpdate(uid, { fullName: name });
+
+  return res.json({
+    status: true,
+    msg: 'Name updated successfully',
+  });
+});
+
+const updateDescription = catchAsync(async (req, res = response) => {
+  const { uid } = req;
+  const { description } = req.body;
+
+  await User.findByIdAndUpdate(uid, { about: description });
+
+  return res.json({
+    status: true,
+    msg: 'Description updated successfully',
+  });
+});
+
 module.exports = {
   getById,
   getAll,
+  updateName,
+  updateDescription,
 };

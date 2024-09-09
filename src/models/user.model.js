@@ -81,9 +81,8 @@ userSchema.pre('findOneAndUpdate', async function (next) {
   const updatedUser = this.getUpdate();
 
   // if password is same as before then save the encripted password and ignore the new one
-  if (!bcrypt.compare(updatedUser.password, user.password) || !this.password) {
+  if (!this.password || !bcrypt.compare(updatedUser.password, user.password)) {
     this.getUpdate().password = user.password;
-
     return next();
   }
 

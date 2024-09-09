@@ -186,8 +186,6 @@ const passwordReset = catchAsync(async (req, res = response) => {
   const token = req.headers.authorization;
   const { password } = req.body;
 
-  console.log('token', req.headers);
-
   if (!token) {
     return res.status(400).json({
       status: false,

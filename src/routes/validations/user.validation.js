@@ -12,6 +12,24 @@ const getAllValidation = [
   validateResultsMiddleware,
 ];
 
+const updateNameValidation = [
+  body('name')
+    .isString('name must be a string')
+    .length({ min: 3, max: 15 }, 'name must be between 3 and 15 characters')
+    .required('name is required'),
+  validateResultsMiddleware,
+];
+
+const updateDescriptionValidation = [
+  body('description')
+    .optional()
+    .isString('description must be a string')
+    .max(100, 'description must be less than 100 characters'),
+  validateResultsMiddleware,
+];
+
 module.exports = {
   getAllValidation,
+  updateNameValidation,
+  updateDescriptionValidation,
 };
