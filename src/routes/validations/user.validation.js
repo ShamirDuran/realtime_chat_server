@@ -1,4 +1,4 @@
-const { query } = require('express-validator');
+const { query, body } = require('express-validator');
 const validateResultsMiddleware = require('../../middlewares/validateResults.middleware');
 
 const getAllValidation = [
@@ -15,8 +15,8 @@ const getAllValidation = [
 const updateNameValidation = [
   body('name')
     .isString('name must be a string')
-    .length({ min: 3, max: 15 }, 'name must be between 3 and 15 characters')
-    .required('name is required'),
+    .isLength({ min: 3, max: 15 }, 'name must be between 3 and 15 characters')
+    .exists('name is required'),
   validateResultsMiddleware,
 ];
 
@@ -24,7 +24,7 @@ const updateDescriptionValidation = [
   body('description')
     .optional()
     .isString('description must be a string')
-    .max(100, 'description must be less than 100 characters'),
+    .isLength({ max: 100 }, 'description must be less than 100 characters'),
   validateResultsMiddleware,
 ];
 
