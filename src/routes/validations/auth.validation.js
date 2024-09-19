@@ -1,4 +1,4 @@
-const { body, check } = require('express-validator');
+const { body } = require('express-validator');
 const validateResultsMiddleware = require('../../middlewares/validateResults.middleware');
 
 const registerValidation = [

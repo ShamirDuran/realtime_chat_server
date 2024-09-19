@@ -3,6 +3,7 @@ const User = require('../models/user.model');
 const Chat = require('../models/chat.model');
 const Message = require('../models/message.model');
 const { messages: messagesConf } = require('../config/api.config');
+const { baseParticipantsData, messagesPopulate } = require('./populates.sockets');
 
 /**
  * Sockets explanation
@@ -40,27 +41,47 @@ io.on('connection', (socket) => {
     }
   }
 
-  // Retrieve list of all chats for a user
   socket.on('get_direct_chats', async (data, callback) => {
     const { uid } = data;
+    const filter = {
+      group: false,
+      'participants.user': uid,
+      'events.type': { $nin: ['pinned', 'deleted'] },
+    };
 
-    const chats = await Chat.find({
-      participants: {
-        $all: [{ $elemMatch: { user: uid } }],
-      },
-    })
-      .populate('participants.user', '_id fullName avatar email status')
-      .populate({
-        path: 'messages',
-        options: {
-          sort: { _id: -1 },
-          limit: messagesConf.limit,
-          populate: {
-            path: 'from',
-            select: '_id fullName avatar',
-          },
-        },
-      });
+    const chats = await Chat.find(filter)
+      .populate(baseParticipantsData)
+      .populate(messagesPopulate);
+
+    callback(chats);
+  });
+
+  socket.on('get_group_chats', async (data, callback) => {
+    const { uid } = data;
+    const filter = {
+      group: true,
+      'participants.user': uid,
+      'events.type': { $nin: ['pinned', 'deleted'] },
+    };
+
+    const chats = await Chat.find(filter)
+      .populate(baseParticipantsData)
+      .populate(messagesPopulate);
+
+    callback(chats);
+  });
+
+  socket.on('get_pinned_chats', async (data, callback) => {
+    const { uid } = data;
+    const filter = {
+      group: false,
+      'participants.user': uid,
+      'events.type': { $in: ['pinned'] },
+    };
+
+    const chats = await Chat.find(filter)
+      .populate(baseParticipantsData)
+      .populate(messagesPopulate);
 
     callback(chats);
   });

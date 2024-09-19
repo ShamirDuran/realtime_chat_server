@@ -41,7 +41,14 @@ const chatSchema = new mongoose.Schema({
   },
   events: [
     {
-      type: String,
+      type: {
+        type: String,
+        enum: ['pinned', 'deleted', 'left', 'added'],
+      },
+      user: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
       createdAt: {
         type: Date,
         default: Date.now,
